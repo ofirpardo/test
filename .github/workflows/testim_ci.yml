@@ -1,14 +1,13 @@
 name: hello-world
-uses: peter-evans/repository-dispatch@v1
-with:
-  token: ${{ secrets.REPO_ACCESS_TOKEN }}
-  repository: username/my-repo
-  event-type: my-event
-  client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
-on: pull_request
+on: push
 jobs:
   my-job:
     runs-on: ubuntu-latest
     steps:
-      - name: my-step
-        run: echo "Hello World!"
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          repository: ofirpardo/test
+          event-type: my-event
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
