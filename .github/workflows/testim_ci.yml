@@ -1,13 +1,27 @@
-name: hello-world
-on: push
+name: Elementor Testim
+
+on: [pull_request_target]
+
 jobs:
-  my-job:
-    runs-on: ubuntu-latest
+  run:
+    #if: github.repository_owner == 'elementor' # WILL NEED TO BE ADJUSTED
+    runs-on: ubuntu-16.04
+    strategy:
+      fail-fast: false
     steps:
-      - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v1
+      - uses: actions/checkout@master
+      - name: Block non-permitted users
+        uses: StyleShit/action-whitelist-users@b8abcef5472afd0c7bcfaadf08c70a082437e459
         with:
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
-          repository: ofirpardo/test-test
-          event-type: my-event
-          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
+          whitelist-file: '.github/workflows/whitelist.txt'
+      - name: Elementor Tests / Init
+        env:
+          TOKEN: ${{ secrets.TOKEN }} # GitHub access token to access the remote repo. # WILL NEED TO BE ADJUSTED
+          REMOTE_TESTS_REPO: ${{ secrets.REMOTE_REPO }} # Remote tests repo, e.g. `owner/repo-name`. # WILL NEED TO BE ADJUSTED
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name || github.repository }} # The HEAD repo that initiated the push/PR.
+        uses: peter-evans/repository-dispatch@d57191493a947e8da4f7bf3fbc389e5b20f21cdf
+        with:
+          token: ${{ env.TOKEN }}
+          repository: ${{ env.REMOTE_TESTS_REPO }}
+          event-type: testim-ci
+          client-payload: '{ "repository": "${{ env.HEAD_REPO }}", "sha": "${{ github.event.pull_request.head.sha || github.head_ref || github.sha }}", "run_id": "${{ github.run_id }}" }'
